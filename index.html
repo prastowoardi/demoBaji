@@ -86,21 +86,19 @@
         bank_name: bankName
       };
 
-      // Enkripsi payload
       const encryptedPayload = encryptWithdrawPayload(payload, merchantAPI, secretKey);
-
-      // URL API (pastikan ini benar)
-      const apiURL = `https://api.paybo.io/api/api/v1/payout/${merchantCode}`;
-
-      try {
-        const response = await fetch(apiURL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ key: encryptedPayload })
-        });
-
+      
+      const resultBox = document.getElementById("resultBox");
+      const apiURL'https://bajipoint.prastowoardi616.workers.dev';
+      
+      fetch(apiURL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ key: encryptedPayload })
+      })
+      .then(async response => {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
@@ -109,9 +107,10 @@
           const text = await response.text();
           resultBox.innerText = "⚠️ Response bukan JSON:\n\n" + text;
         }
-      } catch (error) {
+      })
+      .catch(error => {
         resultBox.innerText = "❌ Terjadi kesalahan saat mengirim request:\n\n" + error;
-      }
+      });
     });
   </script>
 
