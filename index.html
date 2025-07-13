@@ -1,9 +1,16 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy"
+  content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline';
+    connect-src 'self' https://bajipoint.prastowoardi616.workers.dev;
+  ">
   <title>Withdraw INR</title>
-  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
   <style>
     body { font-family: Arial; margin: 2rem; }
     input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
@@ -31,107 +38,8 @@
 
   <div class="result" id="resultBox"></div>
 
-  <script>
-    function encryptWithdrawPayload(data, apikey, secretkey) {
-      const key = CryptoJS.SHA256(apikey);
-      const iv = CryptoJS.enc.Utf8.parse(CryptoJS.SHA256(secretkey).toString(CryptoJS.enc.Hex).substring(0, 16));
-      const dataString = JSON.stringify(data);
-      return CryptoJS.AES.encrypt(dataString, key, {
-        iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
-      }).toString();
-    }
-
-    document.getElementById("withdrawForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const resultBox = document.getElementById("resultBox");
-      resultBox.innerText = "⏳ Mengirim request...";
-
-      const merchantCode = "SKU20241106070658";
-      const merchantAPI = "BLb0eIOjb8ApJhbdMtD56g%3D%3D";
-      const secretKey = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds%3D";
-
-      const payoutCode = "BAJI937W";
-      const callbackURL = "https://uptight-state-10.webhook.cool";
-      const timestamp = Math.floor(Date.now() / 1000);
-      const userID = "123";
-
-      const amountInput = document.getElementById("amount");
-      const ifscInput = document.getElementById("ifsc");
-      const bankAccountInput = document.getElementById("bankAccountNumber");
-      const accountNameInput = document.getElementById("accountName");
-
-      if (!amountInput || !ifscInput || !bankAccountInput || !accountNameInput) {
-        alert("❌ Ada elemen input yang tidak ditemukan! Periksa kembali ID elemen di HTML.");
-        resultBox.innerText = "";
-        return;
-      }
-
-      const amount = parseFloat(amountInput.value);
-      if (isNaN(amount) || amount <= 0) {
-        alert("❌ Amount harus angka positif!");
-        resultBox.innerText = "";
-        return;
-      }
-
-      const accountName = accountNameInput.value.trim();
-      const bankAccountNumber = bankAccountInput.value.trim();
-      const ifscCode = ifscInput.value.trim();
-
-      if (!ifscCode) {
-        alert("❌ IFSC Code harus diisi!");
-        resultBox.innerText = "";
-        return;
-      }
-
-      const bankCode = ifscCode.substring(0, 4);
-      const bankName = bankCode;
-
-      const payload = {
-        merchant_code: merchantCode,
-        transaction_code: `TEST-WD-${timestamp}`,
-        transaction_timestamp: timestamp,
-        transaction_amount: amount,
-        user_id: userID,
-        currency_code: "INR",
-        payout_code: payoutCode,
-        callback_url: callbackURL,
-        account_name: accountName,
-        ifsc_code: ifscCode,
-        bank_account_number: bankAccountNumber,
-        bank_code: bankCode,
-        bank_name: bankName
-      };
-
-      try {
-        const encryptedPayloadRaw = encryptWithdrawPayload(payload, merchantAPI, secretKey);
-        const encryptedPayload = encodeURIComponent(encryptedPayloadRaw);
-
-        const apiURL = 'https://bajipoint.prastowoardi616.workers.dev/';
-
-        const response = await fetch(apiURL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ key: encryptedPayload })
-        });
-
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const data = await response.json();
-          resultBox.innerText = "Withdraw Response!\n\n" + JSON.stringify(data, null, 2);
-        } else {
-          const text = await response.text();
-          resultBox.innerText = "⚠️ Not JSON Response:\n\n" + text;
-        }
-      } catch (error) {
-        resultBox.innerText = "❌ Terjadi kesalahan saat mengirim request:\n\n" + error;
-      }
-    });
-  </script>
+  <!-- External JS file -->
+  <script src="withdraw.js"></script>
 
 </body>
 </html>

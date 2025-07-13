@@ -1,0 +1,15 @@
+{
+  "name": "bajipoint-worker",
+  "version": "1.0.0",
+  "description": "Withdraw INR via Cloudflare Worker",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "echo 'no build step needed'",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "crypto-js": "^4.1.1"
+  }
+}
