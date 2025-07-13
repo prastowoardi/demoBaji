@@ -2,11 +2,11 @@ name = "bajipoint"
 main = "src/index.js"
 compatibility_date = "2025-07-13"
 workers_dev = true
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
+type = "module"
 
 [vars]
 MERCHANT_CODE = "SKU20241106070658"
-MERCHANT_API = "BLb0eIOjb8ApJhbdMtD56g=="
-SECRET_KEY = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds=="
+MERCHANT_API = "BLb0eIOjb8ApJhbdMtD56g%3D%3D"
+SECRET_KEY = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds%3D"
 PAYOUT_CODE = "BAJI937W"
-CALLBACK_URL = "https://uptight-state-10.webhook.cool"

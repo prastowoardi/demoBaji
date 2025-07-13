@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Withdraw INR</title>
+  <style>
+    body { font-family: Arial; margin: 2rem; max-width: 600px; }
+    input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
+    .result { margin-top: 1rem; white-space: pre-wrap; background: #f4f4f4; padding: 1rem; border-radius: 5px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <h2>Withdraw INR</h2>
+  <form id="withdrawForm">
+    <label>Amount (INR):</label>
+    <input type="number" id="amount" required min="0.01" step="0.01" />
+
+    <label>IFSC Code:</label>
+    <input type="text" id="ifsc" required />
+
+    <label>Bank Account Number:</label>
+    <input type="text" id="bankAccountNumber" required />
+
+    <label>Bank Account Name:</label>
+    <input type="text" id="accountName" required />
+
+    <button type="submit">Submit Withdraw</button>
+  </form>
+
+  <div class="result" id="resultBox"></div>
+
+  <script>
+    document.getElementById("withdrawForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const button = e.target.querySelector("button");
+      button.disabled = true;
+
+      const resultBox = document.getElementById("resultBox");
+      resultBox.innerText = "⏳ Sending...";
+
+      const payload = {
+        amount: parseFloat(document.getElementById("amount").value),
+        ifsc: document.getElementById("ifsc").value.trim(),
+        bankAccountNumber: document.getElementById("bankAccountNumber").value.trim(),
+        accountName: document.getElementById("accountName").value.trim()
+      };
+
+      try {
+        const response = await fetch("http://127.0.0.1:8787", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const contentType = response.headers.get("content-type");
+        const data = contentType && contentType.includes("application/json")
+          ? await response.json()
+          : await response.text();
+
+        resultBox.innerText = "✅ Response:\n\n" + (typeof data === "string" ? data : JSON.stringify(data, null, 2));
+      } catch (error) {
+        resultBox.innerText = "❌ Error:\n\n" + error;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
