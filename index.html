@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Withdraw INR</title>
   <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
   <style>
@@ -15,7 +15,7 @@
   <h2>Withdraw INR</h2>
   <form id="withdrawForm">
     <label>Amount (INR):</label>
-    <input type="number" id="amount" required />
+    <input type="number" id="amount" required min="0.01" step="0.01" />
 
     <label>IFSC Code:</label>
     <input type="text" id="ifsc" required />
@@ -29,43 +29,50 @@
     function encryptWithdrawPayload(data, apikey, secretkey) {
       const key = CryptoJS.SHA256(apikey);
       const iv = CryptoJS.enc.Utf8.parse(CryptoJS.SHA256(secretkey).toString(CryptoJS.enc.Hex).substring(0, 16));
-
       const dataString = JSON.stringify(data);
-      return encodeURIComponent(
-        CryptoJS.AES.encrypt(dataString, key, {
-          iv,
-          mode: CryptoJS.mode.CBC,
-          padding: CryptoJS.pad.Pkcs7
-        }).toString()
-      );
+      return CryptoJS.AES.encrypt(dataString, key, {
+        iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      }).toString();
     }
 
-    document.getElementById("withdrawForm").addEventListener("submit", function (e) {
+    document.getElementById("withdrawForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
+      const resultBox = document.getElementById("resultBox");
+      resultBox.innerText = "⏳ Mengirim request...";
+
       const merchantCode = "SKU20241106070658";
-      const merchantAPI = "BLb0eIOjb8ApJhbdMtD56g%3D%3D";
-      const secretKey = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds%3D";
+      const merchantAPI = "BLb0eIOjb8ApJhbdMtD56g==";
+      const secretKey = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds=";
+
       const payoutCode = "BAJI937W";
       const callbackURL = "https://uptight-state-10.webhook.cool";
       const timestamp = Math.floor(Date.now() / 1000);
       const userID = "123";
       const accountName = "RAHUL SHARMA";
       const bankAccountNumber = "11133322";
-      const transactionCode = `TEST-WD-${timestamp}`;
-      const ifscCode = document.getElementById("ifsc").value.trim();
-      const bankCode = ifscCode.substring(0, 4);
-      const bankName = bankCode;
 
+      // Ambil input user
       const amount = parseFloat(document.getElementById("amount").value);
       if (isNaN(amount) || amount <= 0) {
         alert("❌ Amount harus angka positif!");
+        resultBox.innerText = "";
         return;
       }
+      const ifscCode = document.getElementById("ifsc").value.trim();
+      if (!ifscCode) {
+        alert("❌ IFSC Code harus diisi!");
+        resultBox.innerText = "";
+        return;
+      }
+      const bankCode = ifscCode.substring(0, 4);
+      const bankName = bankCode;
 
       const payload = {
         merchant_code: merchantCode,
-        transaction_code: transactionCode,
+        transaction_code: `TEST-WD-${timestamp}`,
         transaction_timestamp: timestamp,
         transaction_amount: amount,
         user_id: userID,
@@ -79,30 +86,32 @@
         bank_name: bankName
       };
 
+      // Enkripsi payload
       const encryptedPayload = encryptWithdrawPayload(payload, merchantAPI, secretKey);
+
+      // URL API (pastikan ini benar)
       const apiURL = `https://api.paybo.io/api/api/v1/payout/${merchantCode}`;
 
-      fetch(apiURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `payload=${encryptedPayload}`
-      })
-      .then(response => response.json())
-      .then(data => {
-        resultBox.innerText = "✅ Withdraw berhasil!\n\n" + JSON.stringify(data, null, 2);
-      })
-      .catch(error => {
-        resultBox.innerText = "❌ Terjadi kesalahan saat mengirim request:\n\n" + error;
-      });
+      try {
+        const response = await fetch(apiURL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ key: encryptedPayload })
+        });
 
-      const resultBox = document.getElementById("resultBox");
-      resultBox.innerHTML = 
-        `📦 Raw Payload:\n${JSON.stringify(payload, null, 2)}\n\n`
-        // `📤 Endpoint:\nhttps://api.paybo.io/api/api/v1/payout/${merchantCode}`
-      statusBox.innerText = "✅ Withdraw request berhasil dikirim!";
-      statusBox.className = "status success";
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          resultBox.innerText = "✅ Withdraw berhasil!\n\n" + JSON.stringify(data, null, 2);
+        } else {
+          const text = await response.text();
+          resultBox.innerText = "⚠️ Response bukan JSON:\n\n" + text;
+        }
+      } catch (error) {
+        resultBox.innerText = "❌ Terjadi kesalahan saat mengirim request:\n\n" + error;
+      }
     });
   </script>
 
