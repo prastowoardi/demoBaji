@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta name="referrer" content="no-referrer" />
@@ -19,6 +19,12 @@
 
     <label>IFSC Code:</label>
     <input type="text" id="ifsc" required />
+
+    <label>Bank Account Number:</label>
+    <input type="text" id="bankAccountNumber" required />
+
+    <label>Bank Account Name:</label>
+    <input type="text" id="accountName" required />
 
     <button type="submit">Submit Withdraw</button>
   </form>
@@ -44,29 +50,42 @@
       resultBox.innerText = "⏳ Mengirim request...";
 
       const merchantCode = "SKU20241106070658";
-      const merchantAPI = "BLb0eIOjb8ApJhbdMtD56g==";
-      const secretKey = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds=";
+      const merchantAPI = "BLb0eIOjb8ApJhbdMtD56g%3D%3D";
+      const secretKey = "NGixn2NDe0G0ACaMHaT1URpR19nEqmQ4Rd0ZkylZUds%3D";
 
       const payoutCode = "BAJI937W";
       const callbackURL = "https://uptight-state-10.webhook.cool";
       const timestamp = Math.floor(Date.now() / 1000);
       const userID = "123";
-      const accountName = "RAHUL SHARMA";
-      const bankAccountNumber = "11133322";
 
-      // Ambil input user
-      const amount = parseFloat(document.getElementById("amount").value);
+      const amountInput = document.getElementById("amount");
+      const ifscInput = document.getElementById("ifsc");
+      const bankAccountInput = document.getElementById("bankAccountNumber");
+      const accountNameInput = document.getElementById("accountName");
+
+      if (!amountInput || !ifscInput || !bankAccountInput || !accountNameInput) {
+        alert("❌ Ada elemen input yang tidak ditemukan! Periksa kembali ID elemen di HTML.");
+        resultBox.innerText = "";
+        return;
+      }
+
+      const amount = parseFloat(amountInput.value);
       if (isNaN(amount) || amount <= 0) {
         alert("❌ Amount harus angka positif!");
         resultBox.innerText = "";
         return;
       }
-      const ifscCode = document.getElementById("ifsc").value.trim();
+
+      const accountName = accountNameInput.value.trim();
+      const bankAccountNumber = bankAccountInput.value.trim();
+      const ifscCode = ifscInput.value.trim();
+
       if (!ifscCode) {
         alert("❌ IFSC Code harus diisi!");
         resultBox.innerText = "";
         return;
       }
+
       const bankCode = ifscCode.substring(0, 4);
       const bankName = bankCode;
 
@@ -86,30 +105,31 @@
         bank_name: bankName
       };
 
-      const encryptedPayload = encryptWithdrawPayload(payload, merchantAPI, secretKey);
-      
-      const apiURL = 'https://bajipoint.prastowoardi616.workers.dev';
-      
-      fetch(apiURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ key: encryptedPayload })
-      })
-      .then(async response => {
+      try {
+        const encryptedPayloadRaw = encryptWithdrawPayload(payload, merchantAPI, secretKey);
+        const encryptedPayload = encodeURIComponent(encryptedPayloadRaw);
+
+        const apiURL = 'https://bajipoint.prastowoardi616.workers.dev/';
+
+        const response = await fetch(apiURL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ key: encryptedPayload })
+        });
+
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
-          resultBox.innerText = "✅ Withdraw berhasil!\n\n" + JSON.stringify(data, null, 2);
+          resultBox.innerText = "Withdraw Response!\n\n" + JSON.stringify(data, null, 2);
         } else {
           const text = await response.text();
-          resultBox.innerText = "⚠️ Response bukan JSON:\n\n" + text;
+          resultBox.innerText = "⚠️ Not JSON Response:\n\n" + text;
         }
-      })
-      .catch(error => {
+      } catch (error) {
         resultBox.innerText = "❌ Terjadi kesalahan saat mengirim request:\n\n" + error;
-      });
+      }
     });
   </script>
 
