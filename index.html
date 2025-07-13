@@ -113,7 +113,7 @@
           ? await response.json()
           : await response.text();
 
-        resultBox.innerText = "✅ Response:\n\n" + (typeof data === "string" ? data : JSON.stringify(data, null, 2));
+        resultBox.innerText = "Response:\n\n" + (typeof data === "string" ? data : JSON.stringify(data, null, 2));
       } catch (error) {
         resultBox.innerText = "❌ Error:\n\n" + error;
       } finally {
